@@ -1,13 +1,17 @@
+import os
 import requests
 import telebot
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_objects():
-	return requests.get("http://localhost:3000/objects").json()
+	return requests.get(f"{os.getenv('API_URL')}/objects").json()
 
 def get_object(number):
-	return requests.get(f"http://localhost:3000/objects/{number}").json()
+	return requests.get(f"{os.getenv('API_URL')}/objects/{int(number)}").json()
 
-bot = telebot.TeleBot("2124560983:AAHzWFqctVTC2-Yh9hZkjx5IFWIsbw37IEA", parse_mode=None)
+bot = telebot.TeleBot(os.getenv("BOT_TOKEN"), parse_mode=None)
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -16,15 +20,14 @@ def send_welcome(message):
 @bot.message_handler(commands=['scp_object'])
 def request_object(message):
 	reply = bot.reply_to(message, "Напиши номер объекта")
-	bot.register_next_step_handler(reply, find_object)
+	bot.register_next_step_handler(reply, reply_with_object)
 
-def find_object(message):
+def reply_with_object(message):
 	try:
-		number = int(message.text)
-		object = get_object(number)
+		object = get_object(message.text)
 		bot.reply_to(message, object['name'])
 	except Exception as e:
-		bot.reply_to(message, "Что-то пошло не так :(")
+		bot.reply_to(message, "Что-то пошло не так :(")		
 
 bot.enable_save_next_step_handlers(delay=2)
 
